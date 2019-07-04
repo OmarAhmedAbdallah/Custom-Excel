@@ -1,5 +1,6 @@
 ﻿using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using OfficeOpenXml.Table;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace CreateExcelSheet.Models
 {
@@ -25,24 +27,27 @@ namespace CreateExcelSheet.Models
 
                 //file has workSheet called EmployeeTable
                 excel.Workbook.Worksheets.Add("EmployeeTable");
-                
+
+                //Create Table
+                CreateTable(excel);
 
                 //fill header
                 FillTableHeader(excel);
 
                 //Fill Data
                 FillData(excel);
-
-
+                
                 //format Bonus
                 //number with 2 decimal places and thousand separator and money symbol
                 // FormatCellsToMoney(excel, Range, Format);
                 FormatCellsToMoney(excel, "I8:I12", "$#,##0.00");
 
 
+           
 
-                //Make Border
-                MakeTableWithFilter(excel);
+                var worksheet = excel.Workbook.Worksheets["EmployeeTable"];
+
+                
 
                 //Create File
                 string FilePath = System.IO.File.ReadAllText(@"..\..\..\ExcelPath.txt");
@@ -57,6 +62,21 @@ namespace CreateExcelSheet.Models
            
             return true;
         }
+        public static void CreateTable(ExcelPackage excel)
+        {
+            //Defining the tables parameters
+            var worksheet = excel.Workbook.Worksheets["EmployeeTable"];
+
+            ExcelRange rg = worksheet.Cells[7, 5, 12, 9];
+            string tableName = "TableEmpolyee";
+
+            //Ading a table to a Range
+            ExcelTable tab = worksheet.Tables.Add(rg, tableName);
+
+            //Formating the table style
+            tab.TableStyle = TableStyles.Light8;
+        }
+
 
         public static void FillTableHeader(ExcelPackage excel)
         {
@@ -73,6 +93,7 @@ namespace CreateExcelSheet.Models
                 // Popular header row data
                 //range of first row Cells[Row Number,Col number]
                 //Add header of table
+                
                 HeaderCells.LoadFromArrays(headerRow);
 
 
@@ -111,34 +132,6 @@ namespace CreateExcelSheet.Models
             //Formate the Range
             worksheet.Cells[Range].Style.Numberformat.Format = Format;
         }
-
-        public static void MakeTableWithFilter(ExcelPackage excel)
-        {
-            var worksheet = excel.Workbook.Worksheets["EmployeeTable"];
-            // worksheet.Cells[From Row, From col, To Row, To Col]
-            //Make border
-            //then make filter
-            using (var ContentTable = worksheet.Cells[7, 5, 12, 9])
-            {
-
-                //it put border to all border position
-                ContentTable.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                ContentTable.Style.Border.Top.Color.SetColor(Color.Black);
-                ContentTable.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                ContentTable.Style.Border.Left.Color.SetColor(Color.Black);
-                ContentTable.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                ContentTable.Style.Border.Right.Color.SetColor(Color.Black);
-                ContentTable.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                ContentTable.Style.Border.Bottom.Color.SetColor(Color.Black);
-
-                //To make filter on colomns
-                ContentTable.AutoFilter = true;
-
-                //Make cell width Fit
-                ContentTable.AutoFitColumns();
-            }
-        }
-
         
     }
 }
